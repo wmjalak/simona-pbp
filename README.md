@@ -1,27 +1,70 @@
-# Simona
+# Build and deploy SPA to the Cloud
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.7.
+Setting up the CircleCI to listen GitHub-repo changes,
+so that on every Git push:
+* CircleCI will
+  * build the app
+  * run the tests
+  * build an Docker image
+  * pushes the image to Azure Container Registry
+* Azure Container Registry has a (automatically generated) Webhook to Azure App Service, and that will
+  * whenever pushing a new image to registry
+    * container is auto-deployed to web app
 
-## Development server
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+## CircleCI
 
-## Code scaffolding
+circleci.com
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+* Log in with your GitHub credentials
+* Projects -> Setup Project
+* Language: `Node`
+* Creates a folder named `.circleci` with a file `config.yml`
+  * `/.circleci/config.yml`
+* What the buildfile does:
+  * builds Angular app
+  * runs Angular tests
+  * builds an Docker image
+  * logs in to Docker registry on Azure
+  * pushes Docker image to the registry
 
-## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+![circleci job](/circleci_job.png)
 
-## Running unit tests
+* Also you need to add the Environment Variables (Project Settings -> Environment Variables):
+  * `DOCKER_USER`
+  * `DOCKER_PASS`
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
-## Running end-to-end tests
+## Azure
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+* Free account: https://aka.ms/free
+* Azure portal: portal.azure.com
 
-## Further help
+### Azure Container Registry
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+* Create private Azure Container Registry
+* A place for Docker images
+  * see Login server url: `***.azurecr.io`
+
+* After pushing the LOCAL Docker image to the registry:
+  * Create a web app (Azure App Service):
+![circleci job](/azure_deploy.png)
+Select `Deploy to Web App`.
+
+
+### VS Code
+* Build Docker image locally
+  * see `config.yml` for instructions
+* Tag the image as `***.azurecr.io/hello:1.0` (this is important for Azure)
+* Docker login to Azure Container Registry
+* Push the image to Azure
+* As a result Container Registry has the repository 'hello' with tag '1.0'
+
+
+### Azure App Service
+
+* See Overview -> `URL` (this is your link to the web app)
+
+
+
